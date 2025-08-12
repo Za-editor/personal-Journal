@@ -13,6 +13,7 @@ const port = process.env.PORT || 3000;
 const saltRounds = 10;
 env.config();
 
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -30,12 +31,17 @@ app.use(express.static("public"));
 app.use(passport.initialize());
 app.use(passport.session());
 
+//const db = new pg.Client({
+ // user: process.env.DB_USER,
+ // host: process.env.DB_HOST,
+ // database: process.env.DB_DATABASE,
+ //password: process.env.DB_PASSWORD,
+ //port: process.env.DB_PORT,
+//});
+
 const db = new pg.Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
 db.connect();
