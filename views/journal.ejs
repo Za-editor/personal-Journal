@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Journal App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --primary-dark: #2563eb;
+        --text: #1f2937;
+        --light: #f9fafb;
+        --card-bg: #ffffff;
+        --success: #10b981;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        line-height: 1.6;
+        color: var(--text);
+        background-color: #f3f4f6;
+        min-height: 100vh;
+        padding-bottom: 4rem;
+      }
+
+      .entry-card {
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .entry-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .entry-input {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <!-- Header -->
+      <header class="mb-10 text-center">
+        <div class="inline-block p-3 rounded-full bg-white shadow-md mb-4">
+          <img
+            src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/cb8b8951-f83f-47a0-a06a-87786edea8f4.png"
+            alt="Journal icon with a quill pen and open book on a wooden table"
+            class="w-12 h-12"
+          />
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+          My Personal Journal
+        </h1>
+        <p class="text-gray-600">Capture your thoughts, one day at a time</p>
+      </header>
+
+      <!-- Create New Entry Form -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-10">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">
+          New Journal Entry
+        </h2>
+        <form action="/newEntry" class="space-y-4" method="POST">
+          <div>
+            <label
+              for="entryTitle"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Title</label
+            >
+            <input
+              name="entryTitle"
+              type="text"
+              id="entryTitle"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="What's on your mind today?"
+              required
+            />
+          </div>
+          <div>
+            <label
+              for="entryContent"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Content</label
+            >
+            <textarea
+              name="entryContent"
+              id="entryContent"
+              class="w-full p-3 border border-gray-300 rounded-lg entry-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Write your thoughts here..."
+              required
+            ></textarea>
+          </div>
+          <div class="flex justify-end">
+            <button
+              type="submit"
+              id="saveEntry"
+              class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition duration-200 shadow-md"
+            >
+              Save Entry
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Entries List -->
+      <div id="entriesContainer">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-semibold text-gray-800">Your Entries</h2>
+          <div class="text-sm text-gray-500" id="entriesCount">0 entries</div>
+        </div>
+
+        <div id="entriesList" class="space-y-6">
+          <% if(entries.length === 0){ %>
+          <div id="noEntriesMessage" class="text-center py-10">
+            <img
+              src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/2389f470-ad4d-48a5-a120-85564c6c4d0a.png"
+              alt="Blank journal page with a quill pen indicating no entries yet"
+              class="mx-auto mb-4 rounded-lg opacity-75"
+            />
+            <p class="text-gray-600">
+              No journal entries yet. Start writing above!
+            </p>
+          </div>
+          <% } else { %>
+          <div class="space-y-6">
+            <% entries.forEach(entry => { %>
+            <div
+              class="bg-white rounded-lg shadow-md entry-card overflow-hidden"
+            >
+              <div class="p-6">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-xl font-semibold text-gray-800">
+                    <%= entry.title %>
+                  </h3>
+                  <div class="text-sm text-gray-500">
+                    <%= new Date(entry.created_at).toLocaleString("en-US", {
+                    dateStyle: "long", timeStyle: "short" }) %>
+                  </div>
+                </div>
+                <div class="text-gray-600 mb-4 whitespace-pre-line">
+                  <%= entry.content %>
+                </div>
+                <div class="flex space-x-2">
+                  <button
+                    class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded transition"
+                    onclick="openModal('<%= entry.id %>')"
+                  >
+                    Edit
+                  </button>
+                  <form
+                    action="/journal/delete/<%= entry.id %>"
+                    method="POST"
+                    onsubmit="return confirm('Are you sure?');"
+                  >
+                    <button
+                      type="submit"
+                      class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <% }) %> <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Entry Modal -->
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-gray-800">Edit Entry</h3>
+            <button
+              id="closeModal"
+              class="text-gray-500 hover:text-gray-700"
+              onclick="closeModal()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <form id="editEntryForm" method="POST">
+            <input type="hidden" id="editEntryId" />
+            <div class="mb-4">
+              <label
+                for="editEntryTitle"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Title</label
+              >
+              <input
+                name="editEntryTitle"
+                type="text"
+                id="editEntryTitle"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+            <div class="mb-6">
+              <label
+                for="editEntryContent"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Content</label
+              >
+              <textarea
+                name="editEntryContent"
+                id="editEntryContent"
+                class="w-full p-3 border border-gray-300 rounded-lg entry-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              ></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+
+              <button
+                type="submit"
+                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+              >
+                Update Entry
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const modal = document.getElementById("editModal");
+      function openModal(id) {
+        modal.classList.remove("hidden");
+        document.getElementById("editEntryForm").action = `/journal/edit/${id}`;
+      }
+
+      function closeModal() {
+        modal.classList.add("hidden");
+      }
+    </script>
+  </body>
+</html>
